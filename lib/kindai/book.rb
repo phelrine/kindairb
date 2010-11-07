@@ -47,7 +47,7 @@ module Kindai
           page_url = URI.parse(permalink_url) + permalink_page.at('frame[name="W_BODY"]')['src']
 
           page_file = open(page_url.to_s)
-          url = page_file.base_uri.to_s + '&vs=5000,5000,0,0,0,0,0,0'
+          url = page_file.base_uri.to_s + '&vs=2000,2000,0,0,0,0,0,0'
           url += "&ref=" + [@trimming[:x], @trimming[:y], @trimming[:w], @trimming[:h], 5000, 5000, 0, 0].join(',') if @trimming
           url
         end

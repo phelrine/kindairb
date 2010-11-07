@@ -12,11 +12,21 @@ module Kindai
     end
 
     def download
+      return if has_zip?
       create_directory
-      download_images
+      pages = download_images
       if @test_mode
         Kindai::Util.logger.info "test done"
         return
+      end
+      # てきとう
+      if @use_divide
+        Kindai::Util.divide_opencv((1..pages).map{|i| path_at(i)})
+        Kindai::Util.resize_all((1..pages).map{|i|
+            [Kindai::Util.append_suffix(path_at(i), '0'),
+              Kindai::Util.append_suffix(path_at(i), '1')]
+          }.flatten, '600x800')
+        Kindai::Util.delete_all((1..pages).map{|i| path_at(i)})
       end
       generate_pdf if @use_pdf
       generate_zip if @use_zip
@@ -97,7 +107,7 @@ module Kindai
             File.delete(Kindai::Util.append_suffix(path_at(i), '1')) if File.exists?(Kindai::Util.append_suffix(path_at(i), '1'))
           end
           # XXX
-          if @use_divide
+          if @use_divide and false
             next if has_divided_file_at(i)
             Kindai::Util.logger.info "downloading " + [@book.author, @book.title, "koma #{i}"].join(' - ')
             Kindai::Util.rich_download(@book.image_url_at(i), path_at(i)) unless has_whole_file_at(i)
@@ -115,7 +125,7 @@ module Kindai
           else
             next if has_whole_file_at(i)
             Kindai::Util.logger.info "downloading " + [@book.author, @book.title, "koma #{i}"].join(' - ')
-            Kindai::Util.download(@book.image_url_at(i), path_at(i))
+            Kindai::Util.rich_download(@book.image_url_at(i), path_at(i))
             unless Kindai::Util.check_file path_at(i)
               File.delete path_at(i)
               raise 'failed to download'
@@ -127,7 +137,7 @@ module Kindai
               }
             end
           end
-          return if @test_mode
+          return 1 if @test_mode
         rescue Interrupt => e
           Kindai::Util.logger.error "#{e.class}: #{e.message}"
           exit 1
@@ -136,7 +146,7 @@ module Kindai
           Kindai::Util.logger.warn "failed (#{failed_count}/#{retry_count}) #{e.class}: #{e.message}"
           if failed_count >= retry_count
             Kindai::Util.logger.info "done"
-            return
+            return i-1
           else
             Kindai::Util.logger.info "sleep and retry"
             sleep 3
@@ -144,6 +154,10 @@ module Kindai
           end
         end
       }
+    end
+
+    def has_zip?
+      File.exist?(full_directory_path + '.zip')
     end
 
     def has_whole_file_at(i)

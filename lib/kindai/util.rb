@@ -69,6 +69,26 @@ module Kindai::Util
     r.empty?
   end
 
+  def self.delete_all(files)
+    Kindai::Util.logger.info "delete files"
+    File.delete(*files)
+  end
+
+  def self.resize_all(files, resize_option)
+    Kindai::Util.logger.info "resizing"
+    files_expand = files.map{|f| "'#{f}'"}.join(" ")
+    system "mogrify -resize #{resize_option} #{files_expand}"
+  end
+
+  def self.divide_opencv(files)
+    Kindai::Util.logger.info "opencv dividing"
+
+    app_path = File.expand_path(File.dirname(__FILE__) + '/../../crop')
+    files_expand = files.map{|f| "'#{f}'"}.join(" ")
+    Kindai::Util.logger.debug "#{app_path} #{files_expand}"
+    system "#{app_path} #{files_expand}"
+  end
+
   def self.divide(path)
     raise "#{path} not exist" unless File.exists? path
     Kindai::Util.logger.info "dividing #{path}"
