@@ -58,6 +58,7 @@ module Kindai
     def publish_auto
       self.clone.trim.resize(1280, 960).trim.zip.name('iphone').publish
       self.clone.trim.resize(600, 800).divide.zip.name('kindle').publish
+      self.clone.trim.resize(600, 1024).divide.zip.name('galaxy_tab').publish
     end
 
     # ------------------------------------
@@ -110,7 +111,7 @@ module Kindai
 
     def divide!(source_path)
       files(source_path).each{|file|
-        Kindai::Util.divide_43(file, output_path)
+        Kindai::Util.divide_with_resize_config(file, output_path, config(:resize) || {width => 3, height => 4})
         GC.start
       }
       return output_path

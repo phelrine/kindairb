@@ -236,4 +236,28 @@ module Kindai::Util
   end
 
 
+  def self.divide_with_resize_config(src_path, output_directory, resize_config)
+    raise "#{src_path} not exist" unless File.exists? src_path
+    raise "resize_config must has width and height" unless resize_config[:width] and resize_config[:height]
+    Kindai::Util.logger.info "divide #{src_path}"
+
+
+    output_base = File.join(output_directory, File.basename(src_path))
+
+    img = Magick::ImageList.new(src_path)
+
+    aspect = resize_config[:width] / resize_config[:height].to_f
+
+    right = img.crop(img.columns - img.rows * aspect, 0, img.columns * aspect, img.rows)
+    right.write(append_suffix(output_base, '0'))
+    right = nil
+
+    left = img.crop(0, 0, img.rows * aspect, img.rows)
+    left.write(append_suffix(output_base, '1'))
+    left = nil
+
+    File.delete(src_path) if File.basename(src_path) == output_directory
+  end
+
+
 end
